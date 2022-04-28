@@ -1,11 +1,11 @@
 #ifndef FONT_H
 #define FONT_H
 
-unsigned short font_width=8;
-unsigned short font_height=8;
-unsigned short font_frames=256;
+int font_width=8;
+int font_height=8;
+int font_frames=256;
 
-unsigned short font_pixels[] = {
+int font_pixels[] = {
 
 	/* 0 */
 
@@ -2833,7 +2833,5 @@ unsigned short font_pixels[] = {
 };
 
 #endif
-
-
 
 

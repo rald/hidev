@@ -20,17 +20,8 @@ typedef unsigned int       uint32;
 
 #define SCREEN_S (SCREEN_W*SCREEN_H)
 
-#define W 10
-#define H 10
-
-typedef struct Cell Cell;
-
-struct Cell {
-  uint8 clr;
-  uint8 obj;
-};
-
-Cell cells[W*H];
+#define W 16
+#define H 16
 
 /* the button register holds the bits which indicate whether each button has
  * been pressed - this has got to be volatile as well
@@ -74,15 +65,15 @@ uint16 rgb16(uint8 red, uint8 green, uint8 blue) {
   return (red & 0x1F) | (green & 0x1F) << 5 | (blue & 0x1F) << 10;
 }
 
-void pset(volatile uint16* srf,int x,int y,uint16 c) {
-  srf[ y * SCREEN_W + x] = c;
+void pset(volatile uint16* srf,uint8 x,uint8 y,uint16 c) {
+  srf[y*SCREEN_W+x]=c;
 }
 
-uint16 pget(volatile uint16* srf,int x,int y) {
-  return srf[ y * SCREEN_W + x];
+uint16 pget(volatile uint16* srf,uint8 x,uint8 y) {
+  return srf[y*SCREEN_W+x];
 }
 
-void frect(volatile uint16* srf,int x,int y,int w,int h,uint16 c) {
+void frect(volatile uint16* srf,uint8 x,uint8 y,uint8 w,uint8 h,uint16 c) {
     for (int j = 0; j < h; ++j) {
         for (int i = 0; i < w; ++i) {
           pset(srf,x+i,y+j,c);
@@ -90,7 +81,7 @@ void frect(volatile uint16* srf,int x,int y,int w,int h,uint16 c) {
     }
 }
 
-void drect(volatile uint16*srf,int x,int y,int w,int h,uint16 c) {
+void drect(volatile uint16* srf,uint8 x,uint8 y,uint8 w,uint8 h,uint16 c) {
   for(int i=x;i<x+w;i++) {
     pset(srf,i,y,c);
     pset(srf,i,y+h-1,c);    
@@ -102,7 +93,7 @@ void drect(volatile uint16*srf,int x,int y,int w,int h,uint16 c) {
   }
 }
 
-void dbmp(volatile uint16* srf,const uint16* bmp,int w,int h,int f,int x,int y,int t) {
+void dbmp(volatile uint16* srf,uint8* bmp,uint8 w,uint8 h,uint8 f,uint8 x,uint8 y,uint8 t) {
   for(int j=0;j<h;j++) {
     for(int i=0;i<w;i++) {
       int k=bmp[i+j*w+f*w*h];
@@ -118,7 +109,7 @@ void dbmp(volatile uint16* srf,const uint16* bmp,int w,int h,int f,int x,int y,i
   }
 }
 
-void dchr(volatile uint16* srf,const uint16* fnt,int w,int h,int f,int x,int y,int s,uint16 c) {
+void dchr(volatile uint16* srf,uint8* fnt,uint8 w,uint8 h,uint8 f,uint8 x,uint8 y,uint8 s,uint16 c) {
   for(int j=0;j<h;j++) {
     for(int i=0;i<w;i++) {
       int k=fnt[i+j*w+f*w*h];
@@ -129,7 +120,7 @@ void dchr(volatile uint16* srf,const uint16* fnt,int w,int h,int f,int x,int y,i
   }
 }
 
-int indexOf(char *l,char c) {
+int indexOf(uint8 *l,uint8 c) {
   int j=-1;
   for(int i=0;l[i];i++) {
     if(l[i]==c) {
@@ -140,8 +131,8 @@ int indexOf(char *l,char c) {
   return j;
 }
 
-void dtxt(volatile uint16* srf,const uint16* fnt,int w,int h,int x,int y,int s,uint16 c,char *txt) {
-  char *l="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+void dtxt(volatile uint16* srf,uint8* fnt,uint8 w,uint8 h,uint8 x,uint8 y,uint8 s,uint16 c,uint8* txt) {
+  uint8 *l="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   int xc=x,yc=y;
   for(int i=0;txt[i];i++) {
     int j=indexOf(l,txt[i]);
@@ -156,7 +147,7 @@ void dtxt(volatile uint16* srf,const uint16* fnt,int w,int h,int x,int y,int s,u
   }
 }
 
-uint16 clr(int c) {
+uint16 clr(uint8 c) {
   return rgb16(
     sweetie_palette[c*3+0],
     sweetie_palette[c*3+1],
@@ -168,7 +159,7 @@ int main() {
 
   REG_DISPLAYCONTROL = VIDEOMODE_3 | BGMODE_2;
 
-  unsigned int cnt=0;
+  uint16 cnt=0;
 
   while(1) {
 
@@ -183,17 +174,41 @@ int main() {
     }
     srand(cnt);
 
-    vsync();
-    frect(SCREEN,0,0,SCREEN_W,SCREEN_H,clr(0));
 
     for(int j=0;j<160/16;j++) {
       for(int i=0;i<240/16;i++) {
-        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,rand()%4,i*16,j*16,15);        
-        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,rand()%24+4,i*16,j*16,15);        
+        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,rand()%4+20,i*16,j*16,15);        
+        if(rand()%2) dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,28,i*16,j*16,15);  
+        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,30,i*16,j*16,15);
       }
     }
 
     while(!button_pressed(BUTTON_START));
+
+    vsync();
+    frect(SCREEN,0,0,SCREEN_W,SCREEN_H,clr(0));
+
+    for(int j=0;j<24;j++) {
+      dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,j,j/10*16+SCREEN_W-16*3,j%10*16,15);      
+    }
+
+    for(int j=0;j<10;j++) {
+
+      dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,j,0,j*16,15);
+
+      for(int i=0;i<10;i++) {
+
+        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,rand()%4+20,i*16+16,j*16,15);        
+
+        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,rand()%4+10,i*16+16,j*16,15);        
+
+        dbmp(SCREEN,bitmap_pixels,bitmap_width,bitmap_height,29,i*16+16,j*16,15);
+
+      }        
+    }
+
+    while(!button_pressed(BUTTON_START));
+
 
   } 
   

@@ -1,11 +1,11 @@
 #ifndef FONT_H
 #define FONT_H
 
-unsigned short font_width=8;
-unsigned short font_height=8;
-unsigned short font_frames=36;
+unsigned char font_width=8;
+unsigned char font_height=8;
+unsigned char font_frames=36;
 
-unsigned short font_pixels[] = {
+unsigned char font_pixels[] = {
 
 	/* 48 0 */
 
